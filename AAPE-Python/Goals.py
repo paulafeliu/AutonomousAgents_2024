@@ -173,7 +173,7 @@ class RandomRoam(Goal):
 
     async def next_state(self):
         print("inside the function")
-        choice = random.choice([self.TURNING, self.STOP, self.MOVING, self.TURNING, self.STOP, self.MOVING])
+        choice = random.choice([self.TURNING, self.STOP, self.MOVING])
         return choice
 
     async def update(self):
@@ -181,7 +181,7 @@ class RandomRoam(Goal):
        
         if self.state == self.STOPPED:
             # If we are not moving, start moving
-            next_state = random.choice([self.TURNING, self.STOP, self.MOVING, self.TURNING, self.STOP, self.MOVING])
+            next_state = random.choice([self.TURNING, self.STOP, self.MOVING])
             self.state = next_state
             await asyncio.sleep(1)
             print("choice: ", next_state)
@@ -199,7 +199,7 @@ class RandomRoam(Goal):
                 await asyncio.sleep(2)
             else:
                 #choose between stopping, forward, turn
-                next_state = random.choice([self.TURNING, self.STOP, self.MOVING, self.TURNING, self.STOP, self.MOVING])
+                next_state = random.choice([self.TURNING, self.STOP, self.MOVING])
                 self.state = next_state
                 await asyncio.sleep(2)
                 print("choice: ", next_state)
@@ -211,32 +211,37 @@ class RandomRoam(Goal):
             await self.a_agent.send_message("action", "S")
             await asyncio.sleep(2)
 
-            next_state = random.choice([self.TURNING, self.STOP, self.MOVING, self.TURNING, self.STOP, self.MOVING])
+            next_state = random.choice([self.TURNING, self.STOP, self.MOVING])
             self.state = next_state
             await asyncio.sleep(2)
             print("choice: ", next_state)
 
            
         elif self.state == self.TURNING:
-            self.requested_actions.append("S")
-            await self.a_agent.send_message("action", "S")
-            await asyncio.sleep(1)
-
-            self.turn_direction = random.choice(["A", "D"])
-            self.requested_actions.append(self.turn_direction)
-            await self.a_agent.send_message("action", self.turn_direction)
-            self.num_turns = random.randint(0,100)
-            await asyncio.sleep(1)
-
-            if self.turns < self.num_turns:  
-                self.turns += 1
-
-            else:
-                self.turns = 0  
-                next_state = random.choice([self.TURNING, self.STOP, self.MOVING, self.TURNING, self.STOP, self.MOVING])
-                self.state = next_state
+            if self.turn_direction is None or self.num_turns is None:
+                self.requested_actions.append("S")  
+                await self.a_agent.send_message("action", "S")
                 await asyncio.sleep(1)
+
+                self.turn_direction = random.choice(["A", "D"])  
+                self.num_turns = random.randint(1, 70) 
+                self.turns = 0  
+                print("Direction chosen:", self.turn_direction)
+                print("Number of turns:", self.num_turns)
+
+            if self.turns < self.num_turns:
+                self.requested_actions.append(self.turn_direction)
+                await self.a_agent.send_message("action", self.turn_direction)
+                self.turns += 1
+                await asyncio.sleep(0.1)  
+            else:
+                
+                self.turn_direction = None  
+                self.num_turns = None  
+                next_state = random.choice([self.TURNING, self.STOP, self.MOVING])
+                self.state = next_state
                 print("choice: ", next_state)
+                await asyncio.sleep(1)
 
             await asyncio.sleep(0.1)
            
