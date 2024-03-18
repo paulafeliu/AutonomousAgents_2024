@@ -163,65 +163,87 @@ class RandomRoam(Goal):
     MOVING = 1
     TURNING = 2
     STOP = 3
-    END = 4
     turn_direction = None
     state = STOPPED
-    action_duration = 0
+    turns = 0
+    num_turns = None
 
     def __init__(self, a_agent):
         super().__init__(a_agent)
-        #self.state = self.STOPPED
-        #self.action_duration = 0
+
+    async def next_state(self):
+        print("inside the function")
+        choice = random.choice([self.TURNING, self.STOP, self.MOVING, self.TURNING, self.STOP, self.MOVING])
+        return choice
 
     async def update(self):
         await super().update()
        
         if self.state == self.STOPPED:
             # If we are not moving, start moving
+            next_state = random.choice([self.TURNING, self.STOP, self.MOVING, self.TURNING, self.STOP, self.MOVING])
+            self.state = next_state
+            await asyncio.sleep(1)
+            print("choice: ", next_state)
+
+        #if its choice is moving, start moving and check if there is any obstacle
+        elif self.state == self.MOVING:
             self.requested_actions.append("W")
             await self.a_agent.send_message("action", "W")
-            self.state = self.MOVING
             print("MOVING")
 
-        #if it is moving, check if there is any obstacle
-        elif self.state == self.MOVING:
             if any(ray_hit == 1 for ray_hit in self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT]):
                 self.requested_actions.append("S")
                 await self.a_agent.send_message("action", "S")
-                self.state = self.END
-                print("END")
+                self.state = self.TURNING
+                await asyncio.sleep(2)
             else:
-                await asyncio.sleep(0)
                 #choose between stopping, forward, turn
-                choice = random.choice([self.TURNING, self.STOPPED, self.MOVING])
-                self.state = choice
-                print("CHOOSING: ", choice)
+                next_state = random.choice([self.TURNING, self.STOP, self.MOVING, self.TURNING, self.STOP, self.MOVING])
+                self.state = next_state
+                await asyncio.sleep(2)
+                print("choice: ", next_state)
+
+            await asyncio.sleep(0.1)
 
         elif self.state == self.STOP:
             self.requested_actions.append("S")
             await self.a_agent.send_message("action", "S")
-            choice = random.choice([self.TURNING, self.STOPPED, self.MOVING])
-            self.state = choice
-            print("CHOOSING: ", choice)
+            await asyncio.sleep(2)
+
+            next_state = random.choice([self.TURNING, self.STOP, self.MOVING, self.TURNING, self.STOP, self.MOVING])
+            self.state = next_state
+            await asyncio.sleep(2)
+            print("choice: ", next_state)
+
            
         elif self.state == self.TURNING:
-            await asyncio.sleep(0)
+            self.requested_actions.append("S")
+            await self.a_agent.send_message("action", "S")
+            await asyncio.sleep(1)
+
             self.turn_direction = random.choice(["A", "D"])
             self.requested_actions.append(self.turn_direction)
             await self.a_agent.send_message("action", self.turn_direction)
-            await asyncio.sleep(2)
+            self.num_turns = random.randint(0,100)
+            await asyncio.sleep(1)
+
+            if self.turns < self.num_turns:  
+                self.turns += 1
+
+            else:
+                self.turns = 0  
+                next_state = random.choice([self.TURNING, self.STOP, self.MOVING, self.TURNING, self.STOP, self.MOVING])
+                self.state = next_state
+                await asyncio.sleep(1)
+                print("choice: ", next_state)
+
+            await asyncio.sleep(0.1)
            
-            choice = random.choice([self.TURNING, self.STOPPED, self.MOVING])
-            self.state = choice
-            print("CHOOSING: ", choice)
-
-        elif self.state == self.END:
-            # If we have finished, don't do anything else
-            await asyncio.sleep(6)
-            print("WAITING")
-
         else:
             print("Unknown state: " + str(self.state))
+    
+
 
 
 class Avoid(Goal):
