@@ -167,10 +167,6 @@ class RandomRoam(Goal):
     def __init__(self, a_agent):
         super().__init__(a_agent)
 
-    async def next_state(self):
-        choice = random.choice([self.TURNING, self.STOP, self.MOVING])
-        return choice
-
     async def update(self):
         await super().update()
        
