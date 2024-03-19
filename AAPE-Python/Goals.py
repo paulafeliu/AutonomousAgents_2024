@@ -3,7 +3,6 @@ import asyncio
 import Sensors
 from collections import Counter
 
-
 class Goal:
     """
     Base class for all actions
@@ -79,7 +78,6 @@ class DoNothing(Goal):
         print("Doing nothing")
         await asyncio.sleep(1)
 
-
 class ForwardStop(Goal):
     """
     Moves forward till it detects an obstacle and then stops
@@ -144,13 +142,10 @@ class Turn(Goal):
             await asyncio.sleep(0.5)
         await asyncio.sleep(10)
         
-        
     async def async_turns(self, n):
         for i in range(n):
             yield i
         print("Done turning")
-
-
 
 class RandomRoam(Goal):
     """
@@ -163,6 +158,7 @@ class RandomRoam(Goal):
     MOVING = 1
     TURNING = 2
     STOP = 3
+
     turn_direction = None
     state = STOPPED
     turns = 0
@@ -172,7 +168,6 @@ class RandomRoam(Goal):
         super().__init__(a_agent)
 
     async def next_state(self):
-        print("inside the function")
         choice = random.choice([self.TURNING, self.STOP, self.MOVING])
         return choice
 
@@ -184,7 +179,7 @@ class RandomRoam(Goal):
             next_state = random.choice([self.TURNING, self.STOP, self.MOVING])
             self.state = next_state
             await asyncio.sleep(1)
-            print("choice: ", next_state)
+            print("Choice: ", next_state)
 
         #if its choice is moving, start moving and check if there is any obstacle
         elif self.state == self.MOVING:
@@ -202,8 +197,7 @@ class RandomRoam(Goal):
                 next_state = random.choice([self.TURNING, self.STOP, self.MOVING])
                 self.state = next_state
                 await asyncio.sleep(2)
-                print("choice: ", next_state)
-
+                print("Choice: ", next_state)
             await asyncio.sleep(0.1)
 
         elif self.state == self.STOP:
@@ -214,37 +208,31 @@ class RandomRoam(Goal):
             next_state = random.choice([self.TURNING, self.STOP, self.MOVING])
             self.state = next_state
             await asyncio.sleep(2)
-            print("choice: ", next_state)
-
+            print("Choice: ", next_state)
            
         elif self.state == self.TURNING:
             if self.turn_direction is None or self.num_turns is None:
                 self.requested_actions.append("S")  
                 await self.a_agent.send_message("action", "S")
                 await asyncio.sleep(1)
-
                 self.turn_direction = random.choice(["A", "D"])  
                 self.num_turns = random.randint(1, 70) 
                 self.turns = 0  
                 print("Direction chosen:", self.turn_direction)
                 print("Number of turns:", self.num_turns)
-
             if self.turns < self.num_turns:
                 self.requested_actions.append(self.turn_direction)
                 await self.a_agent.send_message("action", self.turn_direction)
                 self.turns += 1
                 await asyncio.sleep(0.1)  
             else:
-                
                 self.turn_direction = None  
                 self.num_turns = None  
                 next_state = random.choice([self.TURNING, self.STOP, self.MOVING])
                 self.state = next_state
-                print("choice: ", next_state)
+                print("Choice: ", next_state)
                 await asyncio.sleep(1)
-
             await asyncio.sleep(0.1)
-           
         else:
             print("Unknown state: " + str(self.state))
     
@@ -258,6 +246,7 @@ class Avoid(Goal):
     STOPPED = 0
     MOVING = 1
     TURNING = 2
+
     state = STOPPED
     turn_direction = None
     avoid_distance = 0
@@ -267,14 +256,12 @@ class Avoid(Goal):
 
     async def update(self):
         await super().update()
-        
         if self.state == self.STOPPED:
             self.state = self.MOVING
             print("MOVING")
 
         #if it is moving, check if there is any obstacle
         elif self.state == self.MOVING:
-
             self.requested_actions.append("W")
             await self.a_agent.send_message("action", "W")
 
@@ -286,10 +273,8 @@ class Avoid(Goal):
                 #decide the direction of the turn
                 if self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][0] == 1:
                     self.turn_direction = "D"
-
                 elif self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][2] == 1:
                     self.turn_direction = "A"
-
                 else:
                     # Choose randomly between left ("A") and right ("D") if the center sensor detects something
                     self.turn_direction = random.choice(["A", "D"])
@@ -297,26 +282,22 @@ class Avoid(Goal):
                 self.state = self.TURNING
                 self.avoid_distance = 0 
                 print(f"TURNING: {self.turn_direction}")
-            
             await asyncio.sleep(0.1)
         
         elif self.state == self.TURNING:
-
             # Turn a little bit to avoid the obstacle
             self.requested_actions.append(self.turn_direction)
             await self.a_agent.send_message("action", self.turn_direction)
-            await asyncio.sleep(1)
-        
+            await asyncio.sleep(0.1)
             # Turn a bit to pass the obstacle
             if self.avoid_distance < 3:  
                 self.avoid_distance += 1
-
+                await asyncio.sleep(0.1)
             else:
                 self.avoid_distance = 0  
                 self.state = self.MOVING  
                 await  asyncio.sleep(1) 
                 print("MOVING FORWARD")
-
         else:
             print("Unknown state: " + str(self.state))
 
