@@ -131,7 +131,7 @@ class Turn(Goal):
         # Choose a random direction to turn
         turn_direction = random.choice(["A", "D"])
         # Choose a random number of degrees to turn
-        turn_degrees = random.randint(-100, 100)
+        turn_degrees = random.randint(10, 360)
         
         turns_needed = abs(turn_degrees//5) # 5 degrees per turn
         
@@ -212,18 +212,18 @@ class RandomRoam(Goal):
                 await self.a_agent.send_message("action", "S")
                 await asyncio.sleep(1)
                 self.turn_direction = random.choice(["A", "D"])  
-                self.num_turns = random.randint(1, 70) 
-                self.turns = 0  
+                self.turn_degrees = random.randint(0, 360) 
+                self.turned = 0  
                 print("Direction chosen:", self.turn_direction)
-                print("Number of turns:", self.num_turns)
-            if self.turns < self.num_turns:
+                print("Turn degrees:", self.turn_degrees)
+            if self.turned < self.turn_degrees:
                 self.requested_actions.append(self.turn_direction)
                 await self.a_agent.send_message("action", self.turn_direction)
-                self.turns += 1
+                self.turns += 5
                 await asyncio.sleep(0.1)  
             else:
                 self.turn_direction = None  
-                self.num_turns = None  
+                self.turn_degrees = None  
                 next_state = random.choice([self.TURNING, self.STOP, self.MOVING])
                 self.state = next_state
                 print("Choice: ", next_state)
