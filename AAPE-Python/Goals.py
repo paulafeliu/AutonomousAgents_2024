@@ -131,7 +131,7 @@ class Turn(Goal):
         # Choose a random direction to turn
         turn_direction = random.choice(["A", "D"])
         # Choose a random number of degrees to turn
-        turn_degrees = random.randint(10, 360)
+        turn_degrees = random.randint(10,360)
         
         turns_needed = abs(turn_degrees//5) # 5 degrees per turn
         
@@ -139,13 +139,13 @@ class Turn(Goal):
         async for _ in self.async_turns(turns_needed):
             self.requested_actions.append(turn_direction)
             await self.a_agent.send_message("action", turn_direction)
-            await asyncio.sleep(0.5)
-        await asyncio.sleep(10)
+            await asyncio.sleep(0.3)
+        await asyncio.sleep(2)
         
     async def async_turns(self, n):
         for i in range(n):
             yield i
-        print("Done turning")
+        print("Done turning. Wait for next turn step...")
 
 class RandomRoam(Goal):
     """
@@ -163,18 +163,22 @@ class RandomRoam(Goal):
     state = STOPPED
     turned = 0
     num_turns = None
+    
 
     def __init__(self, a_agent):
         super().__init__(a_agent)
+        
 
     async def update(self):
         await super().update()
        
         if self.state == self.STOPPED:
             # If we are not moving, start moving
-            next_state = random.choice([self.TURNING, self.STOP, self.MOVING])
+            #Choose the next state with assigned probabilities
+            next_state = random.choices([self.TURNING, self.STOP, self.MOVING], weights=(55, 10, 35), k=1)[0]
+            #next_state = #random.choice([self.TURNING, self.STOP, self.MOVING])
             self.state = next_state
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)
             print("Choice: ", next_state)
 
         #if its choice is moving, start moving and check if there is any obstacle
@@ -190,7 +194,7 @@ class RandomRoam(Goal):
                 await asyncio.sleep(2)
             else:
                 #choose between stopping, forward, turn
-                next_state = random.choice([self.TURNING, self.STOP, self.MOVING])
+                next_state = random.choices([self.TURNING, self.STOP, self.MOVING], weights=(55, 10, 35), k=1)[0]
                 self.state = next_state
                 await asyncio.sleep(2)
                 print("Choice: ", next_state)
@@ -201,33 +205,33 @@ class RandomRoam(Goal):
             await self.a_agent.send_message("action", "S")
             await asyncio.sleep(2)
 
-            next_state = random.choice([self.TURNING, self.STOP, self.MOVING])
+            next_state = random.choices([self.TURNING, self.STOP, self.MOVING], weights=(55, 10, 35), k=1)[0]
             self.state = next_state
-            await asyncio.sleep(2)
+            await asyncio.sleep(0.1)
             print("Choice: ", next_state)
            
         elif self.state == self.TURNING:
             if self.turn_direction is None or self.num_turns is None:
                 self.requested_actions.append("S")  
                 await self.a_agent.send_message("action", "S")
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.1)
                 self.turn_direction = random.choice(["A", "D"])  
                 self.turn_degrees = random.randint(0, 360) 
                 self.turned = 0  
                 print("Direction chosen:", self.turn_direction)
                 print("Turn degrees:", self.turn_degrees)
-            if self.turned < self.turn_degrees:
+
+            while self.turned < self.turn_degrees:
                 self.requested_actions.append(self.turn_direction)
                 await self.a_agent.send_message("action", self.turn_direction)
                 self.turned += 5
-                await asyncio.sleep(0.1)  
-            else:
-                self.turn_direction = None  
-                self.turn_degrees = None  
-                next_state = random.choice([self.TURNING, self.STOP, self.MOVING])
-                self.state = next_state
-                print("Choice: ", next_state)
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.3)
+            self.turn_direction = None  
+            self.turn_degrees = None  
+            next_state = random.choice([self.TURNING, self.STOP, self.MOVING])
+            self.state = next_state
+            print("Choice: ", next_state)
+            #await asyncio.sleep(1)
             await asyncio.sleep(0.1)
         else:
             print("Unknown state: " + str(self.state))
