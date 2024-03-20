@@ -161,7 +161,7 @@ class RandomRoam(Goal):
 
     turn_direction = None
     state = STOPPED
-    turns = 0
+    turned = 0
     num_turns = None
 
     def __init__(self, a_agent):
@@ -219,7 +219,7 @@ class RandomRoam(Goal):
             if self.turned < self.turn_degrees:
                 self.requested_actions.append(self.turn_direction)
                 await self.a_agent.send_message("action", self.turn_direction)
-                self.turns += 5
+                self.turned += 5
                 await asyncio.sleep(0.1)  
             else:
                 self.turn_direction = None  
