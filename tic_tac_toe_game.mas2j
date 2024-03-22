@@ -14,7 +14,7 @@ MAS tic_tac_toe_game {
 
     environment: ticTacToe.SingleGameEnvironment()
 
-    agents: randomPlayer;
+    agents: agent_pro_neil;
             myPlayer;
 
 
