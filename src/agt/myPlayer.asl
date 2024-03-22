@@ -1,6 +1,6 @@
 
 /*
-By: Andrew Ng, Neil de la Fuente, Paula Feliu, Roger Garcia and Daniel Vidal
+By: Andrew Ng, Neil de la Fuente, Paula Feliu, Roger Garcia
 
 Implementation of a Tic-Tac-Toe player that just plays random moves.
 
