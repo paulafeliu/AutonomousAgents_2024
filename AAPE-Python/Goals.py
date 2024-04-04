@@ -94,7 +94,7 @@ class ForwardStop(Goal):
     async def update(self):
         await super().update()
         if self.state == self.STOPPED:
-            # If we are not moving, start moving
+            # If we are not moving, start moving 
             self.requested_actions.append("W")
             await self.a_agent.send_message("action", "W")
             self.state = self.MOVING
