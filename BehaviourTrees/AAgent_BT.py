@@ -5,6 +5,7 @@ import json
 import Sensors
 import Goals_BT
 import BTRoam
+import BTCritter
 
 
 class InternalState:
@@ -75,14 +76,16 @@ class AAgent:
         self.goals = {
             "DoNothing": Goals_BT.DoNothing(self),
             "ForwardDist": Goals_BT.ForwardDist(self, -1, 5, 10),
-            "Turn": Goals_BT.Turn(self)
+            "Turn": Goals_BT.Turn(self),
+            "Avoid": Goals_BT.Avoid(self)
         }
         # Active goal
         self.currentGoal = None
 
         # Reference to the possible behaviour trees the agent ca execute
         self.bts = {
-            "BTRoam": BTRoam.BTRoam(self)
+            "BTRoam": BTRoam.BTRoam(self),
+            "BTCritter": BTCritter.BTCritter(self)
         }
 
         # Active behaviour tree
