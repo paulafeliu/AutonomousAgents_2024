@@ -131,18 +131,18 @@ class BTRoam:
         #                         BN_DoNothing(aagent)])
 
         # VERSION 2
-        # self.root = pt.composites.Parallel("Parallel", policy=py_trees.common.ParallelPolicy.SuccessOnAll())
-        # self.root.add_children([BN_ForwardRandom(aagent), BN_TurnRandom(aagent)])
+        self.root = pt.composites.Parallel("Parallel", policy=py_trees.common.ParallelPolicy.SuccessOnAll())
+        self.root.add_children([BN_ForwardRandom(aagent), BN_TurnRandom(aagent)])
 
         # VERSION 3 (with DetectFlower)
-        detection = pt.composites.Sequence(name="DetectFlower", memory=True)
-        detection.add_children([BN_DetectFlower(aagent), BN_DoNothing(aagent)])
+        #detection = pt.composites.Sequence(name="DetectFlower", memory=True)
+        #detection.add_children([BN_DetectFlower(aagent), BN_DoNothing(aagent)])
 
-        roaming = pt.composites.Parallel("Parallel", policy=py_trees.common.ParallelPolicy.SuccessOnAll())
-        roaming.add_children([BN_ForwardRandom(aagent), BN_TurnRandom(aagent)])
+        #roaming = pt.composites.Parallel("Parallel", policy=py_trees.common.ParallelPolicy.SuccessOnAll())
+        #roaming.add_children([BN_ForwardRandom(aagent), BN_TurnRandom(aagent)])
 
-        self.root = pt.composites.Selector(name="Selector", memory=False)
-        self.root.add_children([detection, roaming])
+        #self.root = pt.composites.Selector(name="Selector", memory=False)
+        #self.root.add_children([detection, roaming])
 
         self.behaviour_tree = pt.trees.BehaviourTree(self.root)
 

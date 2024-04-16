@@ -232,30 +232,106 @@ class Avoid:
                 await asyncio.sleep(0)
                 
         except asyncio.CancelledError:
-            print("***** TASK Turn CANCELLED")
+            print("***** TASK Avoid CANCELLED")
             await self.a_agent.send_message("action", "nt")
         
         #return True
 
 class EatFlower:
-    def __init__(self, a_agent, hungry_flag):
+    def __init__(self, a_agent):
         self.a_agent = a_agent
-        self.hungry_flag = hungry_flag
+        #self.hungry_flag = hungry
 
     async def run(self):
         print("inside eatflower")
 
-        if self.hungry_flag:
+        if self.a_agent.hungry:
         #and 'Flower' in [obj['tag'] for obj in self.a_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]]:
             #await self.a_agent.send_message("action", "move_to_flower")
             print("feeding")
             await asyncio.sleep(5)  # Stay near the flower
-            self.hungry_flag = False
+            self.a_agent.hungry = False
             #asyncio.get_event_loop().call_later(15, self.set_hungry)
             return True
         return False
 
 
+class FollowAstronaut:
+
+    MOVING = 0
+    TURNING = 1
+
+    RIGHT = 1
+    LEFT = -1
+
+    def __init__(self, a_agent):
+        self.a_agent = a_agent
+        self.rc_sensor = a_agent.rc_sensor
+        self.i_state = a_agent.i_state
+        self.rotation_amount = 16
+        self.prev_rotation = 0
+        self.accumulated_rotation = 0
+        self.direction = self.RIGHT
+        self.state = self.MOVING
+
+    async def run(self):
+        print("inside followastronaut")
+        try:
+            while True:
+                if self.state == self.MOVING:
+
+                    if not self.a_agent.hungry:
+                        
+                        if any(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][:5]):
+                                    self.direction == self.LEFT
+                                    print("turn left")
+                                    #self.turn_direction = "tr"
+                                    await self.a_agent.send_message("action", "tl")
+
+                        elif any(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][5:]):
+                            self.direction == self.RIGHT
+                            print("turn right")
+                            #self.turn_direction = "tl"
+                            await self.a_agent.send_message("action", "tr")
+                        print("following astronaut")
+                        return True
+                    
+                    elif self.a_agent.hungry:
+                        return False
                 
+                    self.prev_rotation = self.i_state.rotation["y"]
+                    self.accumulated_rotation = 0
+                    self.state = self.TURNING
+
+                elif self.state == self.TURNING:
+                    current_rotation = self.i_state.rotation["y"]
+
+                    if self.direction == self.RIGHT:
+                        if self.prev_rotation > current_rotation: # complete 360 turn clockwise
+                            self.accumulated_rotation += 360 - self.prev_rotation + current_rotation
+                        else:
+                            self.accumulated_rotation += current_rotation - self.prev_rotation
+                    else:
+                        if self.prev_rotation < current_rotation: # complete 260 turn counter-clockwise
+                            self.accumulated_rotation += 360 - current_rotation + self.prev_rotation
+                        else:
+                            self.accumulated_rotation += self.prev_rotation - current_rotation
+                    self.prev_rotation = current_rotation
+
+                    if self.accumulated_rotation >= self.rotation_amount:
+                        # We are there
+                        # print("TURNING DONE.")
+                        await self.a_agent.send_message("action", "nt")
+                        self.accumulated_rotation = 0
+                        self.direction = self.RIGHT
+                        self.state = self.MOVING
+                        return True
+                    
+                    await asyncio.sleep(0)
+                
+        except asyncio.CancelledError:
+            print("***** TASK Avoid CANCELLED")
+            await self.a_agent.send_message("action", "nt")
+
 
 
