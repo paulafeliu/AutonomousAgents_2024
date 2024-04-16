@@ -151,29 +151,27 @@ class Turn:
 class Avoid:
 
     MOVING  = 1
-    STOPPED = 2
-    TURNING = 3
+    TURNING = 2
 
     LEFT = -1
     RIGHT = 1
 
-    state = MOVING
     #turn_direction = None
     #rotation_amount = 45
     #prev_rotation = 0
     #accumulated_rotation = 0
 
     def __init__(self, a_agent):
-        self.a_agent = a_agent
+        #self.a_agent = a_agent
         #self.rc_sensor = a_agent.rc_sensor
         self.a_agent = a_agent
-        #self.rc_sensor = a_agent.rc_sensor
+        self.rc_sensor = a_agent.rc_sensor
         self.i_state = a_agent.i_state
         self.rotation_amount = 45
         self.prev_rotation = 0
         self.accumulated_rotation = 0
         self.direction = self.RIGHT
-        #self.state = self.SELECTING
+        self.state = self.MOVING
         
     
     async def run(self):
@@ -181,53 +179,58 @@ class Avoid:
         try:
             while True:
                     
+                if self.state == self.MOVING:
                     #if any(ray_hit == 1 for ray_hit in self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT]):
                         #sensor_obj_info = self.my_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]
                         #obstacle_angle = self.my_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.ANGLE]
 
-                if self.a_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][:5] == 1:
-                    self.direction == self.RIGHT
-                    #self.turn_direction = "tr"
-                    await self.a_agent.send_message("action", "tr")
+                    if any(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][:5]):
+                        self.direction == self.RIGHT
+                        print("turn right")
+                        #self.turn_direction = "tr"
+                        await self.a_agent.send_message("action", "tr")
 
-                elif self.a_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][5:] == 1:
-                    self.direction == self.LEFT
-                    #self.turn_direction = "tl"
-                    await self.a_agent.send_message("action", "tl")
+                    elif any(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][5:]):
+                        self.direction == self.LEFT
+                        print("turn left")
+                        #self.turn_direction = "tl"
+                        await self.a_agent.send_message("action", "tl")
 
                 #await self.a_agent.send_message("action", self.turn_direction)
 
                 #print(f"TURNING: {self.turn_direction}")
 
-                self.accumulated_rotation = 0
-                self.state = self.TURNING
-
-                current_rotation = self.i_state.rotation["y"]
-                if self.direction == self.RIGHT:
-                    if self.prev_rotation > current_rotation: # complete 360 turn clockwise
-                        self.accumulated_rotation += 360 - self.prev_rotation + current_rotation
-                    else:
-                        self.accumulated_rotation += current_rotation - self.prev_rotation
-                else:
-                    if self.prev_rotation < current_rotation: # complete 260 turn counter-clockwise
-                        self.accumulated_rotation += 360 - current_rotation + self.prev_rotation
-                    else:
-                        self.accumulated_rotation += self.prev_rotation - current_rotation
-                self.prev_rotation = current_rotation
-
-                if self.accumulated_rotation >= self.rotation_amount:
-                    # We are there
-                    # print("TURNING DONE.")
-                    await self.a_agent.send_message("action", "nt")
+                    self.prev_rotation = self.i_state.rotation["y"]
                     self.accumulated_rotation = 0
-                    self.direction = self.RIGHT
-                    #self.state = self.SELECTING
-                    return True
+                    self.state = self.TURNING
+
+                elif self.state == self.TURNING:
+                    current_rotation = self.i_state.rotation["y"]
+
+                    if self.direction == self.RIGHT:
+                        if self.prev_rotation > current_rotation: # complete 360 turn clockwise
+                            self.accumulated_rotation += 360 - self.prev_rotation + current_rotation
+                        else:
+                            self.accumulated_rotation += current_rotation - self.prev_rotation
+                    else:
+                        if self.prev_rotation < current_rotation: # complete 260 turn counter-clockwise
+                            self.accumulated_rotation += 360 - current_rotation + self.prev_rotation
+                        else:
+                            self.accumulated_rotation += self.prev_rotation - current_rotation
+                    self.prev_rotation = current_rotation
+
+                    if self.accumulated_rotation >= self.rotation_amount:
+                        # We are there
+                        # print("TURNING DONE.")
+                        await self.a_agent.send_message("action", "nt")
+                        self.accumulated_rotation = 0
+                        self.direction = self.RIGHT
+                        self.state = self.MOVING
+                        return True
             #await asyncio.sleep(0)
 
                 await asyncio.sleep(0)
                 
-
         except asyncio.CancelledError:
             print("***** TASK Turn CANCELLED")
             await self.a_agent.send_message("action", "nt")

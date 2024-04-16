@@ -129,14 +129,19 @@ class BN_DetectObstacle(pt.behaviour.Behaviour):
         pass
 
     def update(self):
-        print("inside bn detect obstacle")
-        if any(ray_hit == 1 for ray_hit in self.my_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT]):
-                print("BN_DetectObstacle completed with SUCCESS")
-                return pt.common.Status.SUCCESS
+        #print("inside bn detect obstacle")
+        #if any(ray_hit == 1 for ray_hit in self.my_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT]):
+        sensor_obj_info = self.my_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]
+        for index, value in enumerate(sensor_obj_info):
+            if value:  # there is a hit with an object
+                if value["tag"] != "Flower":
+                    print("BN_DetectObstacle completed with SUCCESS")
+                    return pt.common.Status.SUCCESS
         # print("No obstacle...")
         # print("BN_DetectObstacle completed with FAILURE")
-        else: 
-            return pt.common.Status.FAILURE
+        return pt.common.Status.FAILURE
+
+        
 
     def terminate(self, new_status: common.Status):
         pass
@@ -154,6 +159,7 @@ class BN_Avoid(pt.behaviour.Behaviour):
     def update(self):
         print("inside bn avoid")
         if not self.my_goal.done():
+            print("running bn avoid")
             return pt.common.Status.RUNNING
         else:
             res = self.my_goal.result()
