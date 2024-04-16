@@ -311,6 +311,7 @@ class FollowAstronaut:
                     elif self.a_agent.hungry:
                         return False
 
+                    #get previous rotation 
                     self.prev_rotation = self.i_state.rotation["y"]
                     self.accumulated_rotation = 0
                     self.state = self.TURNING
@@ -321,7 +322,8 @@ class FollowAstronaut:
                     if self.direction == self.RIGHT:
                         rotation_change = (current_rotation - self.prev_rotation + 360) % 360
                         self.accumulated_rotation += rotation_change
-                    else:
+                        
+                    elif self.direction == self.LEFT:
                         rotation_change = (self.prev_rotation - current_rotation + 360) % 360
                         self.accumulated_rotation += rotation_change
 
