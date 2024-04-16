@@ -237,6 +237,23 @@ class Avoid:
         
         #return True
 
+class EatFlower:
+    def __init__(self, a_agent, hungry_flag):
+        self.a_agent = a_agent
+        self.hungry_flag = hungry_flag
+
+    async def run(self):
+        print("inside eatflower")
+
+        if self.hungry_flag:
+        #and 'Flower' in [obj['tag'] for obj in self.a_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]]:
+            #await self.a_agent.send_message("action", "move_to_flower")
+            print("feeding")
+            await asyncio.sleep(5)  # Stay near the flower
+            self.hungry_flag = False
+            #asyncio.get_event_loop().call_later(15, self.set_hungry)
+            return True
+        return False
 
 
                 

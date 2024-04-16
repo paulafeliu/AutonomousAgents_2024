@@ -117,6 +117,37 @@ class BN_DetectFlower(pt.behaviour.Behaviour):
     def terminate(self, new_status: common.Status):
         pass
 
+class BN_EatFlower(pt.behaviour.Behaviour):
+    def __init__(self, aagent, hungry):
+        self.my_goal = None
+        print("Initializing BN_EatFlower")
+        super(BN_EatFlower, self).__init__("BN_EatFlower")
+        self.my_agent = aagent
+        self.hungry = hungry
+
+    def initialise(self):
+        self.my_goal = asyncio.create_task(Goals_BT.EatFlower(self.my_agent, self.hungry).run())
+
+    def update(self):
+        print("inside BN_EatFlower")
+        if not self.my_goal.done():
+            print("running BN_EatFlower")
+            return pt.common.Status.RUNNING
+        else:
+            res = self.my_goal.result()
+            if res:
+                print("BN_EatFlower completed with SUCCESS")
+                return pt.common.Status.SUCCESS
+            else:
+                print("BN_EatFlower completed with FAILURE")
+                return pt.common.Status.FAILURE
+
+    def terminate(self, new_status: common.Status):
+        # Finishing the behaviour, therefore we have to stop the associated task
+        self.logger.debug("Terminate BN_EatFlower")
+        self.my_goal.cancel()
+
+
 
 class BN_DetectObstacle(pt.behaviour.Behaviour):
     def __init__(self, aagent):
@@ -157,9 +188,9 @@ class BN_Avoid(pt.behaviour.Behaviour):
         self.my_goal = asyncio.create_task(Goals_BT.Avoid(self.my_agent).run())
 
     def update(self):
-        print("inside bn avoid")
+        #print("inside bn avoid")
         if not self.my_goal.done():
-            print("running bn avoid")
+            #print("running bn avoid")
             return pt.common.Status.RUNNING
         else:
             res = self.my_goal.result()
@@ -180,6 +211,7 @@ class BTCritter:
         # py_trees.logging.level = py_trees.logging.Level.DEBUG
 
         self.aagent = aagent
+        #self.hungry_flag = False
 
         # VERSION 1
         # self.root = pt.composites.Sequence(name="Sequence", memory=True)
@@ -191,9 +223,12 @@ class BTCritter:
         # self.root = pt.composites.Parallel("Parallel", policy=py_trees.common.ParallelPolicy.SuccessOnAll())
         # self.root.add_children([BN_ForwardRandom(aagent), BN_TurnRandom(aagent)])
 
+        #hungry = hungry(self)
         # VERSION 3 (with DetectFlower)
-        detection = pt.composites.Sequence(name="DetectFlower", memory=True)
-        detection.add_children([BN_DetectFlower(aagent), BN_DoNothing(aagent)])
+        eat_flower = pt.composites.Sequence(name="DetectFlower", memory=True)
+        #detection.add_children([BN_DetectFlower(aagent), BN_DoNothing(aagent)])
+        eat_flower.add_children([BN_DetectFlower(aagent), BN_EatFlower(aagent)])
+
 
         roaming = pt.composites.Parallel("Parallel", policy=py_trees.common.ParallelPolicy.SuccessOnAll())
         roaming.add_children([BN_ForwardRandom(aagent), BN_TurnRandom(aagent)])
@@ -205,7 +240,7 @@ class BTCritter:
         #roam_avoid.add_children([det_avoid, roaming]) 
         
         self.root = pt.composites.Selector(name="Selector", memory=False)
-        self.root.add_children([det_avoid, detection, roaming])
+        self.root.add_children([det_avoid, eat_flower, roaming])
         #self.root.add_children([detection, roaming])
 
         self.behaviour_tree = pt.trees.BehaviourTree(self.root)
