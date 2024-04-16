@@ -268,37 +268,50 @@ class FollowAstronaut:
         self.a_agent = a_agent
         self.rc_sensor = a_agent.rc_sensor
         self.i_state = a_agent.i_state
-        self.rotation_amount = 16
+        self.rotation_amount = None
         self.prev_rotation = 0
         self.accumulated_rotation = 0
         self.direction = self.RIGHT
         self.state = self.MOVING
 
     async def run(self):
+
         print("inside followastronaut")
         try:
             while True:
                 if self.state == self.MOVING:
 
                     if not self.a_agent.hungry:
-                        
-                        if any(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][:5]):
-                                    self.direction == self.LEFT
-                                    print("turn left")
-                                    #self.turn_direction = "tr"
-                                    await self.a_agent.send_message("action", "tl")
+                        # sensor hits on the left side
+                        left_hits = [i for i, hit in enumerate(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][:5]) if hit]
+                        # sensor hits on the right side
+                        right_hits = [i for i, hit in enumerate(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][5:]) if hit]
 
-                        elif any(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][5:]):
-                            self.direction == self.RIGHT
-                            print("turn right")
-                            #self.turn_direction = "tl"
-                            await self.a_agent.send_message("action", "tr")
+                        if left_hits:
+                            #la media de los indices de los hits
+                            avg_index = sum(left_hits) / len(left_hits)
+                           
+                            turn_angle = -90 + avg_index * (90 / 5)
+                            print(f"turn left by {turn_angle} degrees")
+                            #no se como indicarle la cantidad de grados que tiene que girar
+                            await self.a_agent.send_message("action", f"tl")
+
+                        elif right_hits:
+                            # Calculate average index of hits for smoother turning
+                            avg_index = sum(right_hits) / len(right_hits)
+                            
+                            turn_angle = avg_index * (90 / 5)
+                            print(f"turn right by {turn_angle} degrees")
+                            #no se como indicarle la cantidad de grados que tiene que girar
+                            await self.a_agent.send_message("action", f"tr")
+
                         print("following astronaut")
                         return True
-                    
+
                     elif self.a_agent.hungry:
                         return False
-                
+
+                    #get previous rotation 
                     self.prev_rotation = self.i_state.rotation["y"]
                     self.accumulated_rotation = 0
                     self.state = self.TURNING
@@ -307,31 +320,24 @@ class FollowAstronaut:
                     current_rotation = self.i_state.rotation["y"]
 
                     if self.direction == self.RIGHT:
-                        if self.prev_rotation > current_rotation: # complete 360 turn clockwise
-                            self.accumulated_rotation += 360 - self.prev_rotation + current_rotation
-                        else:
-                            self.accumulated_rotation += current_rotation - self.prev_rotation
-                    else:
-                        if self.prev_rotation < current_rotation: # complete 260 turn counter-clockwise
-                            self.accumulated_rotation += 360 - current_rotation + self.prev_rotation
-                        else:
-                            self.accumulated_rotation += self.prev_rotation - current_rotation
+                        rotation_change = (current_rotation - self.prev_rotation + 360) % 360
+                        self.accumulated_rotation += rotation_change
+                        
+                    elif self.direction == self.LEFT:
+                        rotation_change = (self.prev_rotation - current_rotation + 360) % 360
+                        self.accumulated_rotation += rotation_change
+
                     self.prev_rotation = current_rotation
 
-                    if self.accumulated_rotation >= self.rotation_amount:
-                        # We are there
-                        # print("TURNING DONE.")
+                    if self.accumulated_rotation >= abs(turn_angle):
                         await self.a_agent.send_message("action", "nt")
                         self.accumulated_rotation = 0
                         self.direction = self.RIGHT
                         self.state = self.MOVING
                         return True
-                    
+
                     await asyncio.sleep(0)
-                
+
         except asyncio.CancelledError:
             print("***** TASK Avoid CANCELLED")
             await self.a_agent.send_message("action", "nt")
-
-
-
