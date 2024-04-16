@@ -342,7 +342,7 @@ class BTCritter:
         
         self.root = pt.composites.Selector(name="Selector", memory=False)
         #self.root.add_children([det_avoid, det_flower, roaming])
-        self.root.add_children([det_flower,det_astro, det_avoid, roaming])
+        self.root.add_children([det_flower, det_astro, det_avoid, roaming])
         #self.root.add_children([detection, roaming])
 
         self.behaviour_tree = pt.trees.BehaviourTree(self.root)
