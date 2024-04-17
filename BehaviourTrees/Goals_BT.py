@@ -162,7 +162,7 @@ class Avoid:
         self.a_agent = a_agent
         self.rc_sensor = a_agent.rc_sensor
         self.i_state = a_agent.i_state
-        self.rotation_amount = 45
+        self.rotation_amount = 30
         self.prev_rotation = 0
         self.accumulated_rotation = 0
         self.direction = self.RIGHT
@@ -235,7 +235,7 @@ class EatFlower:
         #self.hungry_flag = hungry
 
     async def run(self):
-        print("inside eatflower")
+        #print("inside eatflower")
 
         if self.a_agent.hungry:
         #and 'Flower' in [obj['tag'] for obj in self.a_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]]:
@@ -270,7 +270,7 @@ class FollowAstronaut:
 
     async def run(self):
 
-        print("inside followastronaut")
+        #print("inside followastronaut")
         try:
             while not self.ishungry:
                 if self.state == self.MOVING:
@@ -347,9 +347,11 @@ class FollowAstronaut:
                 if self.a_agent.hungry:
                     self.ishungry = True
                     #return False
-
+            #print("fuera del while de follwo astro")
+            #return False
+        
         except asyncio.CancelledError:
-            print("***** TASK Avoid CANCELLED")
+            print("***** TASK Follow CANCELLED")
             await self.a_agent.send_message("action", "nt")
 
 

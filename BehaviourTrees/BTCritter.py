@@ -166,9 +166,9 @@ class BN_DetectObstacle(pt.behaviour.Behaviour):
         sensor_obj_info = self.my_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]
         for index, value in enumerate(sensor_obj_info):
             if value:  # there is a hit with an object
-                #if value["tag"] != "Flower":
-                print("BN_DetectObstacle completed with SUCCESS")
-                return pt.common.Status.SUCCESS
+                if value["tag"] != "Astronaut":
+                    print("BN_DetectObstacle completed with SUCCESS")
+                    return pt.common.Status.SUCCESS
         # print("No obstacle...")
         # print("BN_DetectObstacle completed with FAILURE")
         return pt.common.Status.FAILURE
@@ -332,8 +332,8 @@ class BTCritter:
         det_avoid = pt.composites.Sequence(name="Detect_Avoid", memory=True)
         det_avoid.add_children([BN_DetectObstacle(aagent), BN_Avoid(aagent)])
 
-        #follow_careful = pt.composites.Parallel(name="FollowAstro", policy=py_trees.common.ParallelPolicy.SuccessOnAll())
-        #follow_careful.add_children([ BN_FollowAstro(aagent), BN_Careful(aagent)])#, BN_ForwardRandom(aagent)])
+        #follow_careful = pt.composites.Parallel(name="FollowAstro", policy=py_trees.common.ParallelPolicy.SuccessOnOne())
+        #follow_careful.add_children([ BN_FollowAstro(aagent), BN_Avoid(aagent)])#, BN_ForwardRandom(aagent)])
 
         det_astro = pt.composites.Sequence(name="Detect_Follow", memory=True)
         det_astro.add_children([BN_DetectAstro(aagent), BN_FollowAstro(aagent)])
