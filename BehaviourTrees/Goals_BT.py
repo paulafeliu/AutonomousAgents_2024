@@ -156,14 +156,9 @@ class Avoid:
     LEFT = -1
     RIGHT = 1
 
-    #turn_direction = None
-    #rotation_amount = 45
-    #prev_rotation = 0
-    #accumulated_rotation = 0
 
     def __init__(self, a_agent):
-        #self.a_agent = a_agent
-        #self.rc_sensor = a_agent.rc_sensor
+
         self.a_agent = a_agent
         self.rc_sensor = a_agent.rc_sensor
         self.i_state = a_agent.i_state
@@ -180,9 +175,6 @@ class Avoid:
             while True:
                     
                 if self.state == self.MOVING:
-                    #if any(ray_hit == 1 for ray_hit in self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT]):
-                        #sensor_obj_info = self.my_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]
-                        #obstacle_angle = self.my_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.ANGLE]
 
                     if any(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][:5]):
                         self.direction == self.RIGHT
@@ -273,43 +265,57 @@ class FollowAstronaut:
         self.accumulated_rotation = 0
         self.direction = self.RIGHT
         self.state = self.MOVING
+        self.ishungry = False
+        
 
     async def run(self):
 
         print("inside followastronaut")
         try:
-            while True:
+            while not self.ishungry:
                 if self.state == self.MOVING:
+                    # Check if any of the rays hits
+                    if any(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT]):
+                        
+   
+                        #sensor_obj_info = self.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]
 
-                    if not self.a_agent.hungry:
-                        # sensor hits on the left side
-                        left_hits = [i for i, hit in enumerate(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][:5]) if hit]
+                        #Necesito hacer que solo apunte los que sean astronaut
+                        left_hits = [i for i, hit in enumerate(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][:5]) if hit ]
+                        print(left_hits)
+                        left_hits_astro = left_hits
+                        #left_hits_astro = [i for i in left_hits if sensor_obj_info[i]["tag"] == "Astronaut"]
+                        
                         # sensor hits on the right side
-                        right_hits = [i for i, hit in enumerate(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][5:]) if hit]
-
-                        if left_hits:
+                        #Necesito hacer que solo apunte los que sean astronaut
+                        right_hits = [i for i, hit in enumerate(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][5:]) if hit ]
+                        print(right_hits)
+                        right_hits_astro = right_hits
+                        #right_hits_astro = [i for i in right_hits if sensor_obj_info[i]["tag"] == "Astronaut"]
+                        
+                        if left_hits_astro:
                             #la media de los indices de los hits
-                            avg_index = sum(left_hits) / len(left_hits)
+                            avg_index = sum(left_hits_astro) / len(left_hits_astro)
                            
                             turn_angle = -90 + avg_index * (90 / 5)
                             print(f"turn left by {turn_angle} degrees")
                             #no se como indicarle la cantidad de grados que tiene que girar
                             await self.a_agent.send_message("action", f"tl")
 
-                        elif right_hits:
+                        elif right_hits_astro:
                             # Calculate average index of hits for smoother turning
-                            avg_index = sum(right_hits) / len(right_hits)
+                            avg_index = sum(right_hits_astro) / len(right_hits_astro)
                             
                             turn_angle = avg_index * (90 / 5)
                             print(f"turn right by {turn_angle} degrees")
                             #no se como indicarle la cantidad de grados que tiene que girar
                             await self.a_agent.send_message("action", f"tr")
+                        
+                        await asyncio.sleep(0.5)
+                        await self.a_agent.send_message("action", "mf")
 
                         print("following astronaut")
-                        return True
 
-                    elif self.a_agent.hungry:
-                        return False
 
                     #get previous rotation 
                     self.prev_rotation = self.i_state.rotation["y"]
@@ -337,7 +343,13 @@ class FollowAstronaut:
                         return True
 
                     await asyncio.sleep(0)
+                    
+                if self.a_agent.hungry:
+                    self.ishungry = True
+                    #return False
 
         except asyncio.CancelledError:
             print("***** TASK Avoid CANCELLED")
             await self.a_agent.send_message("action", "nt")
+
+

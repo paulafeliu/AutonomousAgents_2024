@@ -80,6 +80,7 @@ class AAgent:
             "Avoid": Goals_BT.Avoid(self),
             "EatFlower": Goals_BT.EatFlower(self),
             "FollowAstronaut": Goals_BT.FollowAstronaut(self)
+           
         }
         # Active goal
         self.currentGoal = None

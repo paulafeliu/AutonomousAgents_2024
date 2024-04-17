@@ -255,7 +255,7 @@ class BN_DetectAstro(pt.behaviour.Behaviour):
         sensor_obj_info = self.my_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]
         for index, value in enumerate(sensor_obj_info):
             if value:  # there is a hit with an object
-                if value["tag"] == "Astronaut":  # If it is a flower
+                if value["tag"] == "Astronaut":  # If it is the astronaut
                     # print("Flower detected!")
                     print("BN_DetectAstro completed with SUCCESS")
                     return pt.common.Status.SUCCESS
@@ -296,6 +296,7 @@ class BN_FollowAstro(pt.behaviour.Behaviour):
         self.my_goal.cancel()
 
 
+
 class BTCritter:
     def __init__(self, aagent):
         # py_trees.logging.level = py_trees.logging.Level.DEBUG
@@ -331,11 +332,12 @@ class BTCritter:
         det_avoid = pt.composites.Sequence(name="Detect_Avoid", memory=True)
         det_avoid.add_children([BN_DetectObstacle(aagent), BN_Avoid(aagent)])
 
-        following = pt.composites.Sequence(name="FollowAstro", memory=True)
-        following.add_children([ BN_FollowAstro(aagent), BN_ForwardRandom(aagent)])
+        #follow_careful = pt.composites.Parallel(name="FollowAstro", policy=py_trees.common.ParallelPolicy.SuccessOnAll())
+        #follow_careful.add_children([ BN_FollowAstro(aagent), BN_Careful(aagent)])#, BN_ForwardRandom(aagent)])
 
         det_astro = pt.composites.Sequence(name="Detect_Follow", memory=True)
-        det_astro.add_children([BN_DetectAstro(aagent), following])
+        det_astro.add_children([BN_DetectAstro(aagent), BN_FollowAstro(aagent)])
+        #det_astro.add_children([BN_DetectAstro(aagent), follow_careful])
 
         #roam_avoid = pt.composites.Selector(name="Selector", memory=False)
         #roam_avoid.add_children([det_avoid, roaming]) 
@@ -343,7 +345,8 @@ class BTCritter:
         self.root = pt.composites.Selector(name="Selector", memory=False)
         #self.root.add_children([det_avoid, det_flower, roaming])
         self.root.add_children([det_flower, det_astro, det_avoid, roaming])
-        #self.root.add_children([detection, roaming])
+        #self.root.add_children([det_astro])
+        # self.root.add_children([detection, roaming])
 
         self.behaviour_tree = pt.trees.BehaviourTree(self.root)
 
