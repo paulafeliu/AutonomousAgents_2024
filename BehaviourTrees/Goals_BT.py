@@ -238,6 +238,7 @@ class EatFlower:
         #print("inside eatflower")
 
         if self.a_agent.hungry:
+            await self.a_agent.send_message("action", "stop")
         #and 'Flower' in [obj['tag'] for obj in self.a_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]]:
             #await self.a_agent.send_message("action", "move_to_flower")
             print("feeding")
@@ -267,6 +268,7 @@ class FollowAstronaut:
         self.state = self.MOVING
         self.ishungry = False
         
+        
 
     async def run(self):
 
@@ -275,11 +277,25 @@ class FollowAstronaut:
             while not self.ishungry:
                 if self.state == self.MOVING:
                     # Check if any of the rays hits
-                    if any(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT]):
+                    
+                    
+                    if self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][self.a_agent.det_sensor]:
+                        if self.a_agent.det_sensor < 5:
+                            turn_angle = -90 + self.a_agent.det_sensor * (90 / 5)
+                            await self.a_agent.send_message("action", f"tl")
                         
-   
-                        #sensor_obj_info = self.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]
+                        
+                        elif  self.a_agent.det_sensor >5:
+                            turn_angle = self.a_agent.det_sensor * (90 / 5)
+                            await self.a_agent.send_message("action", f"tr")
+                        else:
+                            turn_angle = 0
+                            await self.a_agent.send_message("action", f"mf")
 
+                        
+
+                        #sensor_obj_info = self.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]
+                        """
                         #Necesito hacer que solo apunte los que sean astronaut
                         left_hits = [i for i, hit in enumerate(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][:5]) if hit ]
                         print(left_hits)
@@ -293,6 +309,7 @@ class FollowAstronaut:
                         right_hits_astro = right_hits
                         #right_hits_astro = [i for i in right_hits if sensor_obj_info[i]["tag"] == "Astronaut"]
                         
+       
                         if left_hits_astro:
                             #la media de los indices de los hits
                             avg_index = sum(left_hits_astro) / len(left_hits_astro)
@@ -310,8 +327,8 @@ class FollowAstronaut:
                             print(f"turn right by {turn_angle} degrees")
                             #no se como indicarle la cantidad de grados que tiene que girar
                             await self.a_agent.send_message("action", f"tr")
-                        
-                        await asyncio.sleep(0.5)
+                        """
+                        await asyncio.sleep(0.3)
                         await self.a_agent.send_message("action", "mf")
 
                         print("following astronaut")

@@ -118,6 +118,63 @@ class BN_DetectFlower(pt.behaviour.Behaviour):
         pass
 
 
+class BN_DetectObstacle(pt.behaviour.Behaviour):
+    def __init__(self, aagent):
+        self.my_goal = None
+        print("Initializing BN_DetectObstacle")
+        super(BN_DetectObstacle, self).__init__("BN_DetectObstacle")
+        self.my_agent = aagent
+
+    def initialise(self):
+        pass
+
+    def update(self):
+        #print("inside bn detect obstacle")
+        #if any(ray_hit == 1 for ray_hit in self.my_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT]):
+        sensor_obj_info = self.my_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]
+        for index, value in enumerate(sensor_obj_info):
+            if value:  # there is a hit with an object
+                if value["tag"] != "Astronaut":
+                    print("BN_DetectObstacle completed with SUCCESS")
+                    return pt.common.Status.SUCCESS
+        # print("No obstacle...")
+        # print("BN_DetectObstacle completed with FAILURE")
+        return pt.common.Status.FAILURE
+
+    def terminate(self, new_status: common.Status):
+        pass
+
+class BN_Avoid(pt.behaviour.Behaviour):
+    def __init__(self, aagent):
+        self.my_goal = None
+        print("Initializing BN_Avoid")
+        super(BN_Avoid, self).__init__("BN_Avoid")
+        self.my_agent = aagent
+
+    def initialise(self):
+        self.my_goal = asyncio.create_task(Goals_BT.Avoid(self.my_agent).run())
+
+    def update(self):
+        #print("inside bn avoid")
+        if not self.my_goal.done():
+            #print("running bn avoid")
+            return pt.common.Status.RUNNING
+        else:
+            res = self.my_goal.result()
+            if res:
+                print("BN_Avoid completed with SUCCESS")
+                return pt.common.Status.SUCCESS
+            else:
+                print("BN_Avoid completed with FAILURE")
+                return pt.common.Status.FAILURE
+
+    def terminate(self, new_status: common.Status):
+        # Finishing the behaviour, therefore we have to stop the associated task
+        self.logger.debug("Terminate BN_Avoid")
+        self.my_goal.cancel()
+
+
+
 class BTRoam:
     def __init__(self, aagent):
         # py_trees.logging.level = py_trees.logging.Level.DEBUG
@@ -131,18 +188,18 @@ class BTRoam:
         #                         BN_DoNothing(aagent)])
 
         # VERSION 2
-        self.root = pt.composites.Parallel("Parallel", policy=py_trees.common.ParallelPolicy.SuccessOnAll())
-        self.root.add_children([BN_ForwardRandom(aagent), BN_TurnRandom(aagent)])
+        #self.root = pt.composites.Parallel("Parallel", policy=py_trees.common.ParallelPolicy.SuccessOnAll())
+        #self.root.add_children([BN_ForwardRandom(aagent), BN_TurnRandom(aagent)])
 
         # VERSION 3 (with DetectFlower)
-        #detection = pt.composites.Sequence(name="DetectFlower", memory=True)
-        #detection.add_children([BN_DetectFlower(aagent), BN_DoNothing(aagent)])
+        detection = pt.composites.Sequence(name="DetectFlower", memory=True)
+        detection.add_children([BN_DetectObstacle(aagent), BN_Avoid(aagent)])
 
-        #roaming = pt.composites.Parallel("Parallel", policy=py_trees.common.ParallelPolicy.SuccessOnAll())
-        #roaming.add_children([BN_ForwardRandom(aagent), BN_TurnRandom(aagent)])
+        roaming = pt.composites.Parallel("Parallel", policy=py_trees.common.ParallelPolicy.SuccessOnAll())
+        roaming.add_children([BN_ForwardRandom(aagent), BN_TurnRandom(aagent)])
 
-        #self.root = pt.composites.Selector(name="Selector", memory=False)
-        #self.root.add_children([detection, roaming])
+        self.root = pt.composites.Selector(name="Selector", memory=False)
+        self.root.add_children([detection, roaming])
 
         self.behaviour_tree = pt.trees.BehaviourTree(self.root)
 

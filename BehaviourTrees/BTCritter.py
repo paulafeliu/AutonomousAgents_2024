@@ -227,7 +227,7 @@ class HungryTimer(pt.behaviour.Behaviour):
             print("Hungry completed with SUCCESS")
             return pt.common.Status.SUCCESS
 
-        if not self.agent.hungry and current_time - self.start_time >= 15:
+        if not self.agent.hungry and current_time - self.start_time > 15:
             self.agent.hungry = True  # Set the hungry flag to True
             self.start_time = current_time  # Reset the timer
             print("Hungry completed with SUCCESS")
@@ -247,6 +247,7 @@ class BN_DetectAstro(pt.behaviour.Behaviour):
         print("Initializing BN_DetectAstro")
         super(BN_DetectAstro, self).__init__("BN_DetectAstro")
         self.my_agent = aagent
+        self.my_agent.det_sensor = None
 
     def initialise(self):
         pass
@@ -257,6 +258,7 @@ class BN_DetectAstro(pt.behaviour.Behaviour):
             if value:  # there is a hit with an object
                 if value["tag"] == "Astronaut":  # If it is the astronaut
                     # print("Flower detected!")
+                    self.my_agent.det_sensor = index
                     print("BN_DetectAstro completed with SUCCESS")
                     return pt.common.Status.SUCCESS
         # print("No flower...")
@@ -332,9 +334,12 @@ class BTCritter:
         det_avoid = pt.composites.Sequence(name="Detect_Avoid", memory=True)
         det_avoid.add_children([BN_DetectObstacle(aagent), BN_Avoid(aagent)])
 
-        #follow_careful = pt.composites.Parallel(name="FollowAstro", policy=py_trees.common.ParallelPolicy.SuccessOnOne())
-        #follow_careful.add_children([ BN_FollowAstro(aagent), BN_Avoid(aagent)])#, BN_ForwardRandom(aagent)])
+        det_avoid_astro = pt.composites.Sequence(name="Detect_Avoid_Astro", memory=True)
+        det_avoid_astro.add_children([BN_DetectObstacle(aagent), BN_Avoid(aagent)])
 
+        #follow_careful = pt.composites.Parallel(name="FollowAstro", policy=py_trees.common.ParallelPolicy.SuccessOnOne())
+        #follow_careful.add_children([ BN_FollowAstro(aagent), det_avoid_astro])#, BN_ForwardRandom(aagent)])
+        
         det_astro = pt.composites.Sequence(name="Detect_Follow", memory=True)
         det_astro.add_children([BN_DetectAstro(aagent), BN_FollowAstro(aagent)])
         #det_astro.add_children([BN_DetectAstro(aagent), follow_careful])
