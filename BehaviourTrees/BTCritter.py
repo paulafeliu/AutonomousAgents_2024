@@ -334,8 +334,8 @@ class BTCritter:
         det_avoid = pt.composites.Sequence(name="Detect_Avoid", memory=True)
         det_avoid.add_children([BN_DetectObstacle(aagent), BN_Avoid(aagent)])
 
-        det_avoid_astro = pt.composites.Sequence(name="Detect_Avoid_Astro", memory=True)
-        det_avoid_astro.add_children([BN_DetectObstacle(aagent), BN_Avoid(aagent)])
+        #det_avoid_astro = pt.composites.Sequence(name="Detect_Avoid_Astro", memory=True)
+        #det_avoid_astro.add_children([BN_DetectObstacle(aagent), BN_Avoid(aagent)])
 
         #follow_careful = pt.composites.Parallel(name="FollowAstro", policy=py_trees.common.ParallelPolicy.SuccessOnOne())
         #follow_careful.add_children([ BN_FollowAstro(aagent), det_avoid_astro])#, BN_ForwardRandom(aagent)])
