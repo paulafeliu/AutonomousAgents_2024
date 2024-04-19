@@ -262,7 +262,7 @@ class BN_DetectAstro(pt.behaviour.Behaviour):
                     print("BN_DetectAstro completed with SUCCESS")
                     return pt.common.Status.SUCCESS
         # print("No flower...")
-        # print("BN_DetectFlower completed with FAILURE")
+        #print("BN_Detect astronaut completed with FAILURE")
         return pt.common.Status.FAILURE
 
     def terminate(self, new_status: common.Status):

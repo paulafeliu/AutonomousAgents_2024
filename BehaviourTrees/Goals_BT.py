@@ -242,11 +242,12 @@ class EatFlower:
         #and 'Flower' in [obj['tag'] for obj in self.a_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]]:
             #await self.a_agent.send_message("action", "move_to_flower")
             print("feeding")
-            await asyncio.sleep(5)  # Stay near the flower
+            await asyncio.sleep(3)  # Stay near the flower
             self.a_agent.hungry = False
             #asyncio.get_event_loop().call_later(15, self.set_hungry)
             return True
-        return False
+        else:
+            return False
 
 
 class FollowAstronaut:
@@ -268,31 +269,29 @@ class FollowAstronaut:
         self.state = self.MOVING
         self.ishungry = False
         
-        
-
     async def run(self):
 
         #print("inside followastronaut")
         try:
             while not self.ishungry:
+                #print("hungry:",self.ishungry)
+
                 if self.state == self.MOVING:
                     # Check if any of the rays hits
-                    
                     
                     if self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][self.a_agent.det_sensor]:
                         if self.a_agent.det_sensor < 5:
                             turn_angle = -90 + self.a_agent.det_sensor * (90 / 5)
                             await self.a_agent.send_message("action", f"tl")
-                        
-                        
+                                                
                         elif  self.a_agent.det_sensor >5:
                             turn_angle = self.a_agent.det_sensor * (90 / 5)
                             await self.a_agent.send_message("action", f"tr")
                         else:
                             turn_angle = 0
                             await self.a_agent.send_message("action", f"mf")
-
                         
+                        #await self.a_agent.send_message("action", f"mf")
 
                         #sensor_obj_info = self.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]
                         """
@@ -360,8 +359,11 @@ class FollowAstronaut:
                         return True
 
                     await asyncio.sleep(0)
-                    
-                if self.a_agent.hungry:
+                
+                print("a_agent.hungry", self.a_agent.hungry)
+
+                if not self.a_agent.hungry:
+                    #print("a_agent.hungry", self.a_agent.hungry)
                     self.ishungry = True
                     #return False
             #print("fuera del while de follwo astro")
