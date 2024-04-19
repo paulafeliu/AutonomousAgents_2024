@@ -179,16 +179,12 @@ class Avoid:
                     if any(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][:5]):
                         self.direction == self.RIGHT
                         print("turn right")
-                        #self.turn_direction = "tr"
                         await self.a_agent.send_message("action", "tr")
 
                     elif any(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][5:]):
                         self.direction == self.LEFT
                         print("turn left")
-                        #self.turn_direction = "tl"
                         await self.a_agent.send_message("action", "tl")
-
-                #await self.a_agent.send_message("action", self.turn_direction)
 
                 #print(f"TURNING: {self.turn_direction}")
 
@@ -219,7 +215,6 @@ class Avoid:
                         self.direction = self.RIGHT
                         self.state = self.MOVING
                         return True
-            #await asyncio.sleep(0)
 
                 await asyncio.sleep(0)
                 
@@ -227,27 +222,20 @@ class Avoid:
             print("***** TASK Avoid CANCELLED")
             await self.a_agent.send_message("action", "nt")
         
-        #return True
 
 class EatFlower:
     def __init__(self, a_agent):
         self.a_agent = a_agent
-        #self.hungry_flag = hungry
 
     async def run(self):
-        #print("inside eatflower")
-
-        if self.a_agent.hungry:
+        #if self.a_agent.hungry:
             await self.a_agent.send_message("action", "stop")
-        #and 'Flower' in [obj['tag'] for obj in self.a_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]]:
-            #await self.a_agent.send_message("action", "move_to_flower")
             print("feeding")
             await asyncio.sleep(3)  # Stay near the flower
             self.a_agent.hungry = False
-            #asyncio.get_event_loop().call_later(15, self.set_hungry)
             return True
-        else:
-            return False
+        #else:
+            #return False
 
 
 class FollowAstronaut:
@@ -270,15 +258,10 @@ class FollowAstronaut:
         self.ishungry = False
         
     async def run(self):
-
-        #print("inside followastronaut")
         try:
             while not self.ishungry:
-                #print("hungry:",self.ishungry)
-
                 if self.state == self.MOVING:
                     # Check if any of the rays hits
-                    
                     if self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][self.a_agent.det_sensor]:
                         if self.a_agent.det_sensor < 5:
                             turn_angle = -90 + self.a_agent.det_sensor * (90 / 5)
@@ -291,9 +274,6 @@ class FollowAstronaut:
                             turn_angle = 0
                             await self.a_agent.send_message("action", f"mf")
                         
-                        #await self.a_agent.send_message("action", f"mf")
-
-                        #sensor_obj_info = self.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]
                         """
                         #Necesito hacer que solo apunte los que sean astronaut
                         left_hits = [i for i, hit in enumerate(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][:5]) if hit ]
@@ -332,7 +312,6 @@ class FollowAstronaut:
 
                         print("following astronaut")
 
-
                     #get previous rotation 
                     self.prev_rotation = self.i_state.rotation["y"]
                     self.accumulated_rotation = 0
@@ -359,15 +338,9 @@ class FollowAstronaut:
                         return True
 
                     await asyncio.sleep(0)
-                
-                print("a_agent.hungry", self.a_agent.hungry)
 
                 if not self.a_agent.hungry:
-                    #print("a_agent.hungry", self.a_agent.hungry)
                     self.ishungry = True
-                    #return False
-            #print("fuera del while de follwo astro")
-            #return False
         
         except asyncio.CancelledError:
             print("***** TASK Follow CANCELLED")

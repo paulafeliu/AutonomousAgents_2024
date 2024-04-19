@@ -124,7 +124,6 @@ class BN_EatFlower(pt.behaviour.Behaviour):
         print("Initializing BN_EatFlower")
         super(BN_EatFlower, self).__init__("BN_EatFlower")
         self.my_agent = aagent
-        #self.hungry = hungry
 
     def initialise(self):
         self.my_goal = asyncio.create_task(Goals_BT.EatFlower(self.my_agent).run())
@@ -161,8 +160,6 @@ class BN_DetectObstacle(pt.behaviour.Behaviour):
         pass
 
     def update(self):
-        #print("inside bn detect obstacle")
-        #if any(ray_hit == 1 for ray_hit in self.my_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT]):
         sensor_obj_info = self.my_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]
         for index, value in enumerate(sensor_obj_info):
             if value:  # there is a hit with an object
@@ -187,9 +184,7 @@ class BN_Avoid(pt.behaviour.Behaviour):
         self.my_goal = asyncio.create_task(Goals_BT.Avoid(self.my_agent).run())
 
     def update(self):
-        #print("inside bn avoid")
         if not self.my_goal.done():
-            #print("running bn avoid")
             return pt.common.Status.RUNNING
         else:
             res = self.my_goal.result()
@@ -210,15 +205,10 @@ class HungryTimer(pt.behaviour.Behaviour):
     def __init__(self, agent , current_time, name="HungryTimer"):
         super(HungryTimer, self).__init__(name)
         self.agent = agent
-        #self.timer_started = False
-        #self.start_time = None
         self.agent.hungry = True
         self.start_time = current_time
 
     def initialise(self):
-        #if not self.timer_started:
-            #self.start_time = time.time()  # Use time.time() to get the current time
-            #self.timer_started = True
         pass
 
     def update(self):
@@ -279,9 +269,7 @@ class BN_FollowAstro(pt.behaviour.Behaviour):
         self.my_goal = asyncio.create_task(Goals_BT.FollowAstronaut(self.my_agent).run())
 
     def update(self):
-        #print("inside bn avoid")
         if not self.my_goal.done():
-            #print("running bn avoid")
             return pt.common.Status.RUNNING
         else:
             res = self.my_goal.result()
@@ -324,34 +312,19 @@ class BTCritter:
         eat_flower.add_children([hungry_timer, BN_EatFlower(aagent)])
 
         det_flower = pt.composites.Sequence(name="DetectFlower", memory=True)
-        #detection.add_children([BN_DetectFlower(aagent), BN_DoNothing(aagent)])
         det_flower.add_children([BN_DetectFlower(aagent), eat_flower])
         
-
         roaming = pt.composites.Parallel("Parallel", policy=py_trees.common.ParallelPolicy.SuccessOnAll())
         roaming.add_children([BN_ForwardRandom(aagent), BN_TurnRandom(aagent)])
 
         det_avoid = pt.composites.Sequence(name="Detect_Avoid", memory=True)
         det_avoid.add_children([BN_DetectObstacle(aagent), BN_Avoid(aagent)])
-
-        #det_avoid_astro = pt.composites.Sequence(name="Detect_Avoid_Astro", memory=True)
-        #det_avoid_astro.add_children([BN_DetectObstacle(aagent), BN_Avoid(aagent)])
-
-        #follow_careful = pt.composites.Parallel(name="FollowAstro", policy=py_trees.common.ParallelPolicy.SuccessOnOne())
-        #follow_careful.add_children([ BN_FollowAstro(aagent), det_avoid_astro])#, BN_ForwardRandom(aagent)])
         
         det_astro = pt.composites.Sequence(name="Detect_Follow", memory=True)
         det_astro.add_children([BN_DetectAstro(aagent), BN_FollowAstro(aagent)])
-        #det_astro.add_children([BN_DetectAstro(aagent), follow_careful])
-
-        #roam_avoid = pt.composites.Selector(name="Selector", memory=False)
-        #roam_avoid.add_children([det_avoid, roaming]) 
         
         self.root = pt.composites.Selector(name="Selector", memory=False)
-        #self.root.add_children([det_avoid, det_flower, roaming])
         self.root.add_children([det_flower, det_astro, det_avoid, roaming])
-        #self.root.add_children([det_astro])
-        # self.root.add_children([detection, roaming])
 
         self.behaviour_tree = pt.trees.BehaviourTree(self.root)
 
