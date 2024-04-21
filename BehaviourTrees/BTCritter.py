@@ -327,6 +327,7 @@ class BN_DetectObstacle(pt.behaviour.Behaviour):
         for index, value in enumerate(sensor_obj_info):
             #If there is a hit with an object
             if value: 
+                print("object detected:", value)
                 #If the object it hits is not an astronaut
                 if value["tag"] != "Astronaut":
                     # an obstacle is detected, print a message to the terminal
@@ -347,7 +348,7 @@ class BN_Avoid(pt.behaviour.Behaviour):
     Description: Behaviour that makes the agent avoid an obstacle in the environment
                  using the raycast sensor of the critter
     '''
-    def __init__(self, aagent):
+    def __init__(self, aagent, degrees):
         '''
         init method for BN_Avoid
         '''
@@ -359,12 +360,13 @@ class BN_Avoid(pt.behaviour.Behaviour):
         super(BN_Avoid, self).__init__("BN_Avoid")
         #get the agent
         self.my_agent = aagent
+        self.degrees = degrees
 
     def initialise(self):
         '''
         initialise method for BN_Avoid, creates a task to avoid the obstacle
         '''
-        self.my_goal = asyncio.create_task(Goals_BT.Avoid(self.my_agent).run())
+        self.my_goal = asyncio.create_task(Goals_BT.Avoid(self.my_agent, self.degrees).run())
 
     def update(self):
         '''
@@ -567,6 +569,58 @@ class BN_FollowAstro(pt.behaviour.Behaviour):
         self.logger.debug("Terminate BN_FollowAstro")
         self.my_goal.cancel()
 
+class BN_DetectCritter(pt.behaviour.Behaviour):
+    '''
+    Description: Behaviour that detects a critter in the environment
+                 using the raycast sensor of the critter
+    '''    
+    def __init__(self, aagent):
+        '''
+        init method for BN_DetectCritter
+        '''
+        #Set the goal to None
+        self.my_goal = None
+        #Print a message to the terminal
+        print("Initializing BN_DetectCritter")
+        #Call the parent constructor
+        super(BN_DetectCritter, self).__init__("BN_DetectCritter")
+        #get the agent
+        self.my_agent = aagent
+
+    def initialise(self):
+        '''
+        initialise method for BN_DetectCritter, does nothing, pass
+        '''
+        pass
+
+    def update(self):
+        '''
+        update method for BN_DetectCritter:
+        checks if the raycast sensor detects an astronaut in the environment or not
+        '''
+        #Get the object information from the raycast sensor
+        sensor_obj_info = self.my_agent.rc_sensor.sensor_rays[Sensors.RayCastSensor.OBJECT_INFO]
+        #Iterate through the object information
+        for index, value in enumerate(sensor_obj_info):
+            #If there is a hit with an object
+            if value:  
+                print("object detected:", value)
+                #If the object it hits is a critter
+                if value["tag"] == "CritterMantaRay": 
+
+                    # a critter is detected, print a message to the terminal
+                    print("BN_DetectCritter completed with SUCCESS")
+                    #Return success
+                    return pt.common.Status.SUCCESS
+        #Return failure if no critter is detected
+        return pt.common.Status.FAILURE
+
+    def terminate(self, new_status: common.Status):
+        '''
+        terminate method for BN_DetectCritter, does nothing, pass
+        '''
+        pass
+
 
 
 class BTCritter:
@@ -628,17 +682,23 @@ class BTCritter:
         #Create the detect avoid sequence with the detect obstacle and avoid behaviours
         det_avoid = pt.composites.Sequence(name="Detect_Avoid", memory=True)
         #Add the detect obstacle and avoid behaviours to the sequence as children
-        det_avoid.add_children([BN_DetectObstacle(aagent), BN_Avoid(aagent)])
+        det_avoid.add_children([BN_DetectObstacle(aagent), BN_Avoid(aagent, degrees=30)])
         
         #Create the detect follow sequence with the detect astronaut and follow astronaut behaviours
         det_astro = pt.composites.Sequence(name="Detect_Follow", memory=True)
         #Add the detect astronaut and follow astronaut behaviours to the sequence as children
         det_astro.add_children([BN_DetectAstro(aagent), BN_FollowAstro(aagent)])
+
+        #Create the detect follow sequence with the detect astronaut and follow astronaut behaviours
+        det_critter = pt.composites.Sequence(name="Detect_critter", memory=True)
+        #Add the detect astronaut and follow astronaut behaviours to the sequence as children
+        det_critter.add_children([BN_DetectCritter(aagent), BN_Avoid(aagent, degrees=180)]) 
+
         
         #Create the root selector with the detect flower, detect astronaut, detect avoid, and roaming behaviours
         self.root = pt.composites.Selector(name="Selector", memory=False)
         #Add the detect flower, detect astronaut, detect avoid, and roaming behaviours to the selector as children
-        self.root.add_children([det_flower, det_astro, det_avoid, roaming])
+        self.root.add_children([det_flower, det_astro, det_critter, det_avoid, roaming])
 
         #set the behaviour tree with the root
         self.behaviour_tree = pt.trees.BehaviourTree(self.root)

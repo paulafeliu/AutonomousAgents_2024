@@ -265,7 +265,7 @@ class Avoid:
     RIGHT = 1 # Turn right
 
 
-    def __init__(self, a_agent):
+    def __init__(self, a_agent, rotation_amount):
         '''
         init method for Avoid class
         Input: a_agent: Agent object, the agent that will execute the action (in this case, avoid obstacles)
@@ -277,7 +277,8 @@ class Avoid:
         # get the agent's internal state
         self.i_state = a_agent.i_state
         # set the rotation amount (by default 30 degrees)
-        self.rotation_amount = 30
+        #self.rotation_amount = 30
+        self.rotation_amount = rotation_amount
         # set the previous rotation
         self.prev_rotation = 0
         # set the accumulated rotation
@@ -355,7 +356,7 @@ class Avoid:
                         # Return True when the action is done
                         return True
                 # Sleep for 0 seconds and keep running the action if the agent has not finish avoiding the obstacle
-                await asyncio.sleep(0)
+                await asyncio.sleep(0.1)
         # If the action is cancelled
         except asyncio.CancelledError:
             # Print a message to the terminal
