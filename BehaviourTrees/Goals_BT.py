@@ -380,14 +380,20 @@ class EatFlower:
         Use asyncio to run the action of eating a flower
         Output: True, when the action is done, in this case, after the agent has eaten the flower
         '''
-        #if self.a_agent.hungry:
+        # Check if the agent is hungry
+        if self.a_agent.hungry:
+            # Send the message "action" to the agent (stop)
             await self.a_agent.send_message("action", "stop")
-            print("feeding")
-            await asyncio.sleep(3)  # Stay near the flower
+            # Sleep for 5 seconds next to the flower
+            await asyncio.sleep(5)  
+            # Set the agent as not hungry
             self.a_agent.hungry = False
+            # Return True when the action is done, the agent has eaten the flower
             return True
-        #else:
-            #return False
+        # If the agent is not hungry
+        else:
+            # Return False, as the agent is not hungry and has not eaten the flower
+            return False
 
 
 
@@ -459,43 +465,9 @@ class FollowAstronaut:
                             turn_angle = 0
                             # Send the message "mf" to the agent (move forward)
                             await self.a_agent.send_message("action", f"mf")
-                        
-                        """
-                        #Necesito hacer que solo apunte los que sean astronaut
-                        left_hits = [i for i, hit in enumerate(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][:5]) if hit ]
-                        print(left_hits)
-                        left_hits_astro = left_hits
-                        #left_hits_astro = [i for i in left_hits if sensor_obj_info[i]["tag"] == "Astronaut"]
-                        
-                        # sensor hits on the right side
-                        #Necesito hacer que solo apunte los que sean astronaut
-                        right_hits = [i for i, hit in enumerate(self.rc_sensor.sensor_rays[Sensors.RayCastSensor.HIT][5:]) if hit ]
-                        print(right_hits)
-                        right_hits_astro = right_hits
-                        #right_hits_astro = [i for i in right_hits if sensor_obj_info[i]["tag"] == "Astronaut"]
-                        
-       
-                        if left_hits_astro:
-                            #la media de los indices de los hits
-                            avg_index = sum(left_hits_astro) / len(left_hits_astro)
-                           
-                            turn_angle = -90 + avg_index * (90 / 5)
-                            print(f"turn left by {turn_angle} degrees")
-                            #no se como indicarle la cantidad de grados que tiene que girar
-                            await self.a_agent.send_message("action", f"tl")
-
-                        elif right_hits_astro:
-                            # Calculate average index of hits for smoother turning
-                            avg_index = sum(right_hits_astro) / len(right_hits_astro)
-                            
-                            turn_angle = avg_index * (90 / 5)
-                            print(f"turn right by {turn_angle} degrees")
-                            #no se como indicarle la cantidad de grados que tiene que girar
-                            await self.a_agent.send_message("action", f"tr")
-                        """
-                        #set a sleep time to wait for the agent to turn
+                        #set a sleep time to wait for the agent to turn  or move forward
                         await asyncio.sleep(0.15)
-                        #If no a
+                        #go forward another time (this was added empirically to make the agent follow the astronaut better)
                         await self.a_agent.send_message("action", "mf")
 
 
