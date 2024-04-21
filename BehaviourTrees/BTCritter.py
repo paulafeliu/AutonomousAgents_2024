@@ -327,7 +327,7 @@ class BN_DetectObstacle(pt.behaviour.Behaviour):
         for index, value in enumerate(sensor_obj_info):
             #If there is a hit with an object
             if value: 
-                #If the object it hits is not an astronaut
+                #If the object it hits is not an astronaut nor critter
                 if value["tag"] != "Astronaut" and value["tag"]!="CritterMantaRay":
                     # an obstacle is detected, print a message to the terminal
                     print("BN_DetectObstacle completed with SUCCESS")
@@ -603,7 +603,6 @@ class BN_DetectCritter(pt.behaviour.Behaviour):
         for index, value in enumerate(sensor_obj_info):
             #If there is a hit with an object
             if value:  
-                print("object detected:", value)
                 #If the object it hits is a critter
                 if value["tag"] == "CritterMantaRay": 
 

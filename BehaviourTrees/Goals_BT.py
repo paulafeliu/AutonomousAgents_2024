@@ -355,7 +355,7 @@ class Avoid:
                         self.state = self.MOVING
                         # Return True when the action is done
                         return True
-                # Sleep for 0 seconds and keep running the action if the agent has not finish avoiding the obstacle
+                # Sleep for 0.1 seconds and keep running the action if the agent has not finish avoiding the obstacle
                 await asyncio.sleep(0.1)
         # If the action is cancelled
         except asyncio.CancelledError:
